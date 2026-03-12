@@ -256,54 +256,41 @@ function cerrarAnalisis(){
   document.getElementById("modalAnalisis").style.display="none";
 }
 
+
+  
 function generarComparativa(){
 
   const asesor = document.getElementById("asesorBusqueda").value.toLowerCase();
   const tipo = document.getElementById("tipoComparacion").value;
 
-  let columnaTiempo = "DIA";
+  const idxMes = encabezados.indexOf("MES");
+  const idxSemana = encabezados.indexOf("SEMANA");
+  const idxDia = encabezados.indexOf("DIA");
 
-  if(tipo === "dia") columnaTiempo = "DIA";
-  if(tipo === "semana") columnaTiempo = "SEMANA";
-  if(tipo === "mes") columnaTiempo = "MES";
-  if(tipo === "trimestre") columnaTiempo = "MES";
-
-  const idxTiempo = encabezados.indexOf(columnaTiempo);
-
-  // FILTRAR SOLO EL ASESOR
   let datosAsesor = datos.filter(f=>{
     const texto = f.join(" ").toLowerCase();
-    return texto.includes(asesor);
-  });
+    if(!texto.includes(asesor)) return false;
 
-  // FILTRAR SEGÚN TIPO
-  datosAsesor = datosAsesor.filter(f=>{
-
+    // FILTROS SEGÚN TIPO
     if(tipo==="dia"){
-      return !f[idxTiempo].toLowerCase().includes("total");
+      if(f[idxDia].toLowerCase().includes("total")) return false;
     }
 
     if(tipo==="semana"){
-      return f[idxTiempo].toLowerCase().includes("total semana");
+      if(!f[idxSemana].toLowerCase().includes("total semana")) return false;
     }
 
-    if(tipo==="mes"){
-      return f[idxTiempo].toLowerCase().includes("total");
+    if(tipo==="mes" || tipo==="trimestre"){
+      if(!f[idxMes].toLowerCase().includes("total")) return false;
     }
 
-    if(tipo==="trimestre"){
-      return f[idxTiempo].toLowerCase().includes("total");
-    }
-
+    return true;
   });
 
   if(datosAsesor.length===0){
     document.getElementById("resultadoAnalisis").innerHTML="No se encontraron datos";
     return;
   }
-
-  // ORDENAR POR TIEMPO
-  datosAsesor.sort((a,b)=> a[idxTiempo].localeCompare(b[idxTiempo]));
 
   const indicadores = [
     "Prom. CONTENIDOS",
@@ -324,7 +311,6 @@ function generarComparativa(){
   <th>MES</th>
   <th>SEMANA</th>
   <th>DIA</th>
-
   `;
 
   indicadores.forEach(i=>{
@@ -337,53 +323,55 @@ function generarComparativa(){
 
   datosAsesor.forEach(fila=>{
 
-    html += `<tr><td style="font-weight:bold">${fila[idxTiempo]}</td>`;
+    html += `
+    <tr>
+    <td>${fila[idxMes]}</td>
+    <td>${fila[idxSemana]}</td>
+    <td>${fila[idxDia]}</td>
+    `;
 
     indicadores.forEach(ind=>{
 
       const idx = encabezados.indexOf(ind);
-      if(idx===-1) return;
+      if(idx === -1) return;
 
-      let valorTexto = fila[idx];
+      const valorTexto = fila[idx];
+
       let valor = parseFloat(valorTexto.replace("%",""));
       if(isNaN(valor)) valor = 0;
-
 
       let estado="Inicio";
       let color="#333";
 
-      if(prev[ind]!==undefined){
+      if(prev[ind] !== undefined){
 
-        if(valor>prev[ind]){
+        if(valor > prev[ind]){
           estado="Mejora";
           color="green";
         }
-        else if(valor<prev[ind]){
+        else if(valor < prev[ind]){
           estado="Desmejora";
           color="red";
         }
 
       }
 
-      html+=`
-      <td>${fila[encabezados.indexOf("MES")]}</td>
-      <td>${fila[encabezados.indexOf("SEMANA")]}</td>
-      <td>${fila[encabezados.indexOf("DIA")]}</td>
-
+      html += `
+      <td style="font-weight:bold">${valorTexto}</td>
       <td style="color:${color}; font-weight:bold">${estado}</td>
       `;
 
-      prev[ind]=valor;
+      prev[ind] = valor;
 
     });
 
-    html+="</tr>";
+    html += "</tr>";
 
   });
 
-  html+="</tbody></table>";
+  html += "</tbody></table>";
 
-  document.getElementById("resultadoAnalisis").innerHTML=html;
+  document.getElementById("resultadoAnalisis").innerHTML = html;
 
 }
 
@@ -431,6 +419,7 @@ overflow-y:auto;
     
 </body>
 </html>
+
 
 
 

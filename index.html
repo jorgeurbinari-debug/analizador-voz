@@ -121,7 +121,7 @@ fetch(url)
 .then(r=>r.text())
 .then(csv=>{
   const filas=parseCSV(csv);
-    encabezados = filas[0];
+    encabezados = filas[0].map(h => h.trim());
     datos = filas.slice(1);
 
   const IDX={DIA:encabezados.indexOf("DIA"),SEMANA:encabezados.indexOf("SEMANA"),MES:encabezados.indexOf("MES")};
@@ -332,10 +332,10 @@ function generarComparativa(){
 
     indicadores.forEach(ind=>{
 
-      const idx = encabezados.indexOf(ind);
+      const idx = encabezados.findIndex(h => h.trim() === ind.trim());
       if(idx === -1) return;
 
-      const valorTexto = fila[idx];
+      const valorTexto = fila[idx] || "";
 
       let valor = parseFloat(valorTexto.replace("%",""));
       if(isNaN(valor)) valor = 0;
@@ -419,6 +419,7 @@ overflow-y:auto;
     
 </body>
 </html>
+
 
 
 

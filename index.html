@@ -371,18 +371,35 @@ idxTiempo.forEach(i=>{
     valor = parseFloat(valorTexto.replace("%",""));
     if(isNaN(valor)) valor = 0;
 
-    if(prev[ind] !== undefined){
+if(prev[ind] !== undefined){
 
-      if(valor > prev[ind]){
-        estado="Mejora";
-        color="green";
-      }
-      else if(valor < prev[ind]){
-        estado="Desmejora";
-        color="red";
-      }
+  // Indicadores invertidos (donde bajar es mejor)
+  if(ind === "TMO_R"){
 
+    if(valor < prev[ind]){
+      estado="Mejora";
+      color="green";
     }
+    else if(valor > prev[ind]){
+      estado="Desmejora";
+      color="red";
+    }
+
+  }else{
+
+    // Indicadores normales
+    if(valor > prev[ind]){
+      estado="Mejora";
+      color="green";
+    }
+    else if(valor < prev[ind]){
+      estado="Desmejora";
+      color="red";
+    }
+
+  }
+
+}
 
     prev[ind] = valor;
 
@@ -450,6 +467,7 @@ overflow-y:auto;
     
 </body>
 </html>
+
 
 
 

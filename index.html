@@ -123,7 +123,7 @@ fetch(url)
   const filas=parseCSV(csv);
     encabezados = filas[0].map(h => h.trim());
     datos = filas.slice(1);
-
+  console.log(encabezados);
   const IDX={DIA:encabezados.indexOf("DIA"),SEMANA:encabezados.indexOf("SEMANA"),MES:encabezados.indexOf("MES")};
 
   // Fecha más reciente
@@ -419,6 +419,7 @@ overflow-y:auto;
     
 </body>
 </html>
+
 
 
 

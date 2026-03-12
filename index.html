@@ -325,10 +325,11 @@ let html = `
 <table style="width:100%; border-collapse:collapse; font-size:12px">
 <thead>
 <tr>
+`;
+
 columnasTiempo.forEach(c=>{
   html += `<th>${c}</th>`;
 });
-`;
 
   indicadores.forEach(i=>{
     html += `<th>${i}</th><th>Versus</th>`;
@@ -340,9 +341,9 @@ columnasTiempo.forEach(c=>{
 
 datosAsesor.sort((a,b)=>{
   if(tipo === "dia"){
-    return new Date(a[idxTiempo]) - new Date(b[idxTiempo]);
+    return new Date(a[idxDia]) - new Date(b[idxDia]);
   }
-  return a[idxTiempo].localeCompare(b[idxTiempo]);
+  return a[idxMes].localeCompare(b[idxMes]);
 });
 
 
@@ -449,6 +450,7 @@ overflow-y:auto;
     
 </body>
 </html>
+
 
 
 

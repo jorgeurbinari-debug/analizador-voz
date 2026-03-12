@@ -321,7 +321,10 @@ function generarComparativa(){
   <table style="width:100%; border-collapse:collapse; font-size:12px">
   <thead>
   <tr>
-  <th>${columnaTiempo}</th>
+  <th>MES</th>
+  <th>SEMANA</th>
+  <th>DIA</th>
+
   `;
 
   indicadores.forEach(i=>{
@@ -341,8 +344,10 @@ function generarComparativa(){
       const idx = encabezados.indexOf(ind);
       if(idx===-1) return;
 
-      let valor = parseFloat(fila[idx]);
+      let valorTexto = fila[idx];
+      let valor = parseFloat(valorTexto.replace("%",""));
       if(isNaN(valor)) valor = 0;
+
 
       let estado="Inicio";
       let color="#333";
@@ -361,7 +366,10 @@ function generarComparativa(){
       }
 
       html+=`
-      <td style="font-weight:bold">${valor}</td>
+      <td>${fila[encabezados.indexOf("MES")]}</td>
+      <td>${fila[encabezados.indexOf("SEMANA")]}</td>
+      <td>${fila[encabezados.indexOf("DIA")]}</td>
+
       <td style="color:${color}; font-weight:bold">${estado}</td>
       `;
 
@@ -423,6 +431,7 @@ overflow-y:auto;
     
 </body>
 </html>
+
 
 
 

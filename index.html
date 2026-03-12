@@ -260,14 +260,24 @@ function generarComparativa(){
 
   const asesor = document.getElementById("asesorBusqueda").value.toLowerCase();
 
-  const datosAsesor = datos.filter(f =>
-    f.join(" ").toLowerCase().includes(asesor)
-  );
+  const datosAsesor = datos.filter(f => {
+  
+      const filaTexto = f.join(" ").toLowerCase();
+    
+      if(!filaTexto.includes(asesor)) return false;
+    
+      if(f.join(" ").toLowerCase().includes("total")) return false;
+    
+      return true;
+    
+    });
+
 
   if(datosAsesor.length==0){
     document.getElementById("resultadoAnalisis").innerHTML="No se encontraron datos";
     return;
   }
+const tipo = document.getElementById("tipoComparacion").value;
 
   let columnaTiempo = "MES";
 
@@ -277,6 +287,9 @@ function generarComparativa(){
     if(tipo === "trimestre") columnaTiempo = "MES";
     
     const idxTiempo = encabezados.indexOf(columnaTiempo);
+    datosAsesor.sort((a,b)=>{
+        return a[idxTiempo].localeCompare(b[idxTiempo]);
+      });
 
 
   const indicadores = [
@@ -295,7 +308,7 @@ function generarComparativa(){
   <table style="width:100%; border-collapse:collapse; font-size:12px">
   <thead>
   <tr>
-    <th>Mes</th>
+    <th>${columnaTiempo}</th>
   `;
 
   indicadores.forEach(i=>{
@@ -397,5 +410,6 @@ overflow-y:auto;
     
 </body>
 </html>
+
 
 

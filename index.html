@@ -266,7 +266,10 @@ function cerrarAnalisis(){
   
 function generarComparativa(){
 
-  const asesor = document.getElementById("asesorBusqueda").value.toLowerCase();
+  const asesor = (document.getElementById("asesorBusqueda").value || "").toLowerCase();
+  document.getElementById("asesorTitulo").innerHTML =
+"👤 Asesor analizado: <span style='color:#007bff'>" + asesor.toUpperCase() + "</span>";
+  
   const tipo = document.getElementById("tipoComparacion").value;
 
   const idxMes = encabezados.indexOf("MES");
@@ -446,7 +449,8 @@ overflow-y:auto;
     <button onclick="cerrarAnalisis()" style="position:absolute; right:10px; top:10px;">❌</button>
     
     <h3>📊 Comparativa de Indicadores</h3>
-
+   
+      <div id="asesorTitulo" style="font-weight:bold;color:#2c3e50;margin-bottom:10px;"></div>
     <input type="text" id="asesorBusqueda" placeholder="Nombre del asesor">
 
     <select id="tipoComparacion">
@@ -470,7 +474,7 @@ overflow-y:auto;
 <script>
 function exportarPDF(){
 
-  const asesor = document.getElementById("asesorBusqueda").value;
+  const asesor = document.getElementById("asesorTitulo").innerText.replace("👤 Asesor analizado: ","");
 
   const contenedor = document.createElement("div");
 
@@ -492,6 +496,7 @@ function exportarPDF(){
 </script>
 </body>
 </html>
+
 
 
 

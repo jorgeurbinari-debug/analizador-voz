@@ -304,14 +304,18 @@ function generarComparativa(){
     "TMO_R"
   ];
 
-  let html = `
-  <table style="width:100%; border-collapse:collapse; font-size:12px">
-  <thead>
-  <tr>
-  <th>MES</th>
-  <th>SEMANA</th>
-  <th>DIA</th>
-  `;
+let columnaTiempo = "";
+
+if(tipo === "dia") columnaTiempo = "DIA";
+if(tipo === "semana") columnaTiempo = "SEMANA";
+if(tipo === "mes" || tipo === "trimestre") columnaTiempo = "MES";
+
+let html = `
+<table style="width:100%; border-collapse:collapse; font-size:12px">
+<thead>
+<tr>
+<th>${columnaTiempo}</th>
+`;
 
   indicadores.forEach(i=>{
     html += `<th>${i}</th><th>Versus</th>`;
@@ -321,14 +325,32 @@ function generarComparativa(){
 
   let prev = {};
 
+if(tipo === "dia"){
+  datosAsesor.sort((a,b)=> new Date(a[idxDia]) - new Date(b[idxDia]));
+}
+
+if(tipo === "semana"){
+  datosAsesor.sort((a,b)=> a[idxSemana].localeCompare(b[idxSemana]));
+}
+
+if(tipo === "mes" || tipo === "trimestre"){
+  datosAsesor.sort((a,b)=> a[idxMes].localeCompare(b[idxMes]));
+}
+
+
+  
   datosAsesor.forEach(fila=>{
 
-    html += `
-    <tr>
-    <td>${fila[idxMes]}</td>
-    <td>${fila[idxSemana]}</td>
-    <td>${fila[idxDia]}</td>
-    `;
+let valorTiempo = "";
+
+if(tipo === "dia") valorTiempo = fila[idxDia];
+if(tipo === "semana") valorTiempo = fila[idxSemana];
+if(tipo === "mes" || tipo === "trimestre") valorTiempo = fila[idxMes];
+
+html += `
+<tr>
+<td>${valorTiempo || ""}</td>
+`;
 
    indicadores.forEach(ind=>{
 
@@ -424,6 +446,7 @@ overflow-y:auto;
     
 </body>
 </html>
+
 
 
 

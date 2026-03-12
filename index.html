@@ -330,40 +330,45 @@ function generarComparativa(){
     <td>${fila[idxDia]}</td>
     `;
 
-    indicadores.forEach(ind=>{
+   indicadores.forEach(ind=>{
 
-      const idx = encabezados.findIndex(h => h.trim() === ind.trim());
-      if(idx === -1) return;
+  const idx = encabezados.findIndex(h => h.trim() === ind.trim());
 
-      const valorTexto = fila[idx] || "";
+  let valorTexto = "";
+  let valor = 0;
+  let estado="Inicio";
+  let color="#333";
 
-      let valor = parseFloat(valorTexto.replace("%",""));
-      if(isNaN(valor)) valor = 0;
+  if(idx !== -1){
 
-      let estado="Inicio";
-      let color="#333";
+    valorTexto = fila[idx] || "";
+    valor = parseFloat(valorTexto.replace("%",""));
+    if(isNaN(valor)) valor = 0;
 
-      if(prev[ind] !== undefined){
+    if(prev[ind] !== undefined){
 
-        if(valor > prev[ind]){
-          estado="Mejora";
-          color="green";
-        }
-        else if(valor < prev[ind]){
-          estado="Desmejora";
-          color="red";
-        }
-
+      if(valor > prev[ind]){
+        estado="Mejora";
+        color="green";
+      }
+      else if(valor < prev[ind]){
+        estado="Desmejora";
+        color="red";
       }
 
-      html += `
-      <td style="font-weight:bold">${valorTexto}</td>
-      <td style="color:${color}; font-weight:bold">${estado}</td>
-      `;
+    }
 
-      prev[ind] = valor;
+    prev[ind] = valor;
 
-    });
+  }
+
+  html += `
+  <td style="font-weight:bold">${valorTexto}</td>
+  <td style="color:${color}; font-weight:bold">${estado}</td>
+  `;
+
+});
+    
 
     html += "</tr>";
 
@@ -419,6 +424,7 @@ overflow-y:auto;
     
 </body>
 </html>
+
 
 
 

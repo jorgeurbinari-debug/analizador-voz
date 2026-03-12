@@ -457,6 +457,7 @@ overflow-y:auto;
     </select>
 
     <button onclick="generarComparativa()">Generar análisis</button>
+    <button onclick="exportarPDF()">📄 Exportar PDF</button>
 
     <div id="resultadoAnalisis" style="margin-top:20px;"></div>
 
@@ -464,9 +465,34 @@ overflow-y:auto;
 
 </div>
 
-    
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<script>
+function exportarPDF(){
+
+  const asesor = document.getElementById("asesorBusqueda").value;
+
+  const contenedor = document.createElement("div");
+
+  contenedor.innerHTML = `
+  <h2 style="text-align:center">Reporte de Indicadores</h2>
+  <p><b>Asesor:</b> ${asesor}</p>
+  <p><b>Fecha:</b> ${new Date().toLocaleDateString()}</p>
+  ` + document.getElementById("resultadoAnalisis").innerHTML;
+
+  const opciones = {
+    margin: 10,
+    filename: 'reporte_indicadores.pdf',
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+  };
+
+  html2pdf().set(opciones).from(contenedor).save();
+}
+</script>
 </body>
 </html>
+
 
 
 

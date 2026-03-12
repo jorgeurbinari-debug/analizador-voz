@@ -311,21 +311,23 @@ function generarComparativa(){
   ];
 
 const mapaTiempo = {
-  dia: {col:"MES",col:"SEMANA",col:"DIA", idx: idxDia},
-  semana: {col:"MES",col:"SEMANA", idx: idxSemana},
-  mes: {col:"MES", idx: idxMes},
-  trimestre: {col:"MES", idx: idxMes}
+  dia: {cols:["MES","SEMANA","DIA"], idx:[idxMes,idxSemana,idxDia]},
+  semana: {cols:["MES","SEMANA"], idx:[idxMes,idxSemana]},
+  mes: {cols:["MES"], idx:[idxMes]},
+  trimestre: {cols:["MES"], idx:[idxMes]}
 };
 
 const tiempo = mapaTiempo[tipo];
-const columnaTiempo = tiempo.col;
+const columnasTiempo = tiempo.cols;
 const idxTiempo = tiempo.idx;
 
 let html = `
 <table style="width:100%; border-collapse:collapse; font-size:12px">
 <thead>
 <tr>
-<th>${columnaTiempo}</th>
+columnasTiempo.forEach(c=>{
+  html += `<th>${c}</th>`;
+});
 `;
 
   indicadores.forEach(i=>{
@@ -347,12 +349,11 @@ datosAsesor.sort((a,b)=>{
   
   datosAsesor.forEach(fila=>{
 
-let valorTiempo = fila[idxTiempo] || "";
+html += "<tr>";
 
-html += `
-<tr>
-<td>${valorTiempo || ""}</td>
-`;
+idxTiempo.forEach(i=>{
+  html += `<td>${fila[i] || ""}</td>`;
+});
 
    indicadores.forEach(ind=>{
 
@@ -448,6 +449,7 @@ overflow-y:auto;
     
 </body>
 </html>
+
 
 
 

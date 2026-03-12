@@ -1,33 +1,350 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Analizador de Voz IA</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-        iframe {
-            width: 100%;
-            height: 100vh;
-            border: none;
-        }
-        h1 {
-            background: #111;
-            color: white;
-            padding: 15px;
-            margin: 0;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Panel de Indicadores Mejorado</title>
+
+<style>
+body{
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background:#f4f6f9;
+  margin:0;
+  padding:20px;
+}
+h2{text-align:center;color:#2c3e50;}
+input,select{padding:10px;margin:8px 5px;border-radius:6px;border:1px solid #ccc;}
+.controles{text-align:center;margin-bottom:10px;}
+.table-container{overflow:auto;max-height:65vh;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.1);background:white;}
+table{border-collapse:collapse;width:100%;font-size:12px;transition: all 0.3s;}
+th{background:#34495e;color:white;padding:10px;position:sticky;top:0;z-index:2;cursor:pointer;}
+td{padding:8px;text-align:center;border-bottom:1px solid #eee;position:relative;transition: all 0.3s;}
+td, th {white-space: nowrap;text-overflow: ellipsis; overflow: hidden;}
+th:nth-child(2), td:nth-child(2) {min-width: 120px;text-align:left;}
+tr:nth-child(even){background:#f9fbfd;}
+tr:hover{background:#e8f4ff;}
+.kpi-verde{background:#d4edda;color:#155724;font-weight:bold;}
+.kpi-amarillo{background:#fff3cd;color:#856404;font-weight:bold;}
+.kpi-rojo{background:#f8d7da;color:#721c24;font-weight:bold;}
+#resumenKPI{background:white;padding:12px;border-radius:10px;margin-bottom:10px;box-shadow:0 4px 10px rgba(0,0,0,0.1);font-size:12px;}
+#fechaActualizacion{text-align:center;font-weight:bold;margin-bottom:10px;color:#2c3e50;}
+/* Ocultar columnas Representante(DNI) y Lider */
+th:nth-child(1),td:nth-child(1),th:nth-child(3),td:nth-child(3){display:none;}
+/* Congelar columna RAC */
+th:nth-child(2),td:nth-child(2){
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 3;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+th:nth-child(2){z-index: 4;background: #34495e;}
+/* Barras de KPI */
+.barra-kpi{
+  height:10px;
+  border-radius:5px;
+  margin-bottom:2px;
+  transition: width 0.5s;
+}
+/* Tooltips */
+td[data-tooltip]:hover::after{
+  content: attr(data-tooltip);
+  position:absolute;
+  top:-25px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#333;
+  color:#fff;
+  padding:3px 6px;
+  border-radius:4px;
+  font-size:10px;
+  white-space: nowrap;
+  z-index:10;
+}
+/* Animación de highlight */
+@keyframes highlight-up {0%{background:#fff}100%{background:#d4edda;}}
+@keyframes highlight-down {0%{background:#fff}100%{background:#f8d7da;}}
+.highlight-up{animation: highlight-up 1s;}
+.highlight-down{animation: highlight-down 1s;}
+</style>
 </head>
 <body>
-    <h1>Analizador de Voz con Inteligencia Artificial</h1>
 
-    <iframe src="https://4509d9c3c91b237825.gradio.live"></iframe>
+<h2>📊 Panel de Indicadores Mejorado</h2>
+<div id="fechaActualizacion"></div>
 
+<div class="controles">
+  <input type="text" id="filtro" placeholder="Buscar...">
+  <button onclick="abrirAnalisis()">📈 Análisis de Asesor</button>
+  <select id="vista">
+    <option value="dia">Vista Diaria</option>
+    <option value="semana">Vista Semanal</option>
+    <option value="mes">Vista Mensual</option>
+  </select>
+  <select id="mesFiltro"><option value="">Todos los meses</option></select>
+</div>
+
+   
+
+<div id="resumenKPI"></div>
+
+<div class="table-container">
+  <table>
+    <thead></thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<script>
+
+let encabezados = [];
+let datos = [];
+    
+const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTv__z4dmUZOol3wAk_xfvxVHrJHFuaP3dKX8M9S-j6dd3WjUz0iCpxGnIOzpq2s1oOKPWGf5q45Yox/pub?output=csv";
+
+/* ===== CSV Parser ===== */
+function parseCSV(text){
+  const rows=[], row=[], value="", insideQuotes=false;
+  let r=[], v="", inQuotes=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i], n=text[i+1];
+    if(c === '"' && inQuotes && n === '"'){v+='"'; i++;} 
+    else if(c === '"'){inQuotes=!inQuotes;} 
+    else if(c === ',' && !inQuotes){r.push(v);v="";} 
+    else if((c=='\n'||c=='\r')&&!inQuotes){if(v||r.length){r.push(v);rows.push(r);} r=[];v="";} 
+    else v+=c;
+  }
+  if(v||r.length){r.push(v);rows.push(r);}
+  return rows;
+}
+
+fetch(url)
+.then(r=>r.text())
+.then(csv=>{
+  const filas=parseCSV(csv);
+    encabezados = filas[0];
+    datos = filas.slice(1);
+
+  const IDX={DIA:encabezados.indexOf("DIA"),SEMANA:encabezados.indexOf("SEMANA"),MES:encabezados.indexOf("MES")};
+
+  // Fecha más reciente
+  function parseFechaLatam(fechaStr){
+    if(!fechaStr) return null;
+    const partes=fechaStr.includes("/")?fechaStr.split("/"):fechaStr.split("-");
+    if(partes.length!==3) return null;
+    return new Date(parseInt(partes[2],10), parseInt(partes[1],10)-1, parseInt(partes[0],10));
+  }
+  const fechas = datos.map(f=>f[IDX.DIA]).filter(f=>f && !f.toLowerCase().includes("total")).map(parseFechaLatam).filter(f=>f instanceof Date && !isNaN(f));
+  const fechaMax = new Date(Math.max(...fechas));
+  document.getElementById("fechaActualizacion").textContent = `DATOS ACTUALIZADOS AL DÍA ${fechaMax.toLocaleDateString("es-CL")}`;
+
+  const thead=document.querySelector("thead");
+  const tbody=document.querySelector("tbody");
+
+  thead.innerHTML="<tr>"+encabezados.map(h=>`<th data-col="${h}">${h}</th>`).join("")+"</tr>";
+
+  // Meses dinámicos
+  const mesSel=document.getElementById("mesFiltro");
+  [...new Set(datos.map(f=>f[IDX.MES]))].forEach(m=>{
+    if(!m) return;
+    const o=document.createElement("option");
+    o.value=o.textContent=m;
+    mesSel.appendChild(o);
+  });
+
+  const reglasKPI={
+    "% FCR 1dia":90,"%FCR 7dia":90,"% Adher General":80,"% Descto":80,"% Rein.":5,"% Ef. BAF":80,
+    "% Argumentario":23,"% Oferta":80,"% Adh Capl":25,"%adh Oferta 0":20,"%adh Oferta 1":12,"%adh Oferta 2":23,
+    "%adh Oferta 3":55,"% VS Atendidas":90,"% Baja Parc.":4,"% Short Call":5,"% Transf.":10,"% Baja Parc. IPTV":4,"% Corte rac":1
+  };
+  const reglasInvertidas=["% Short Call","% Transf.","% Adh Capl","% Rein.","%adh Oferta 0","% Baja Parc.","% Argumentario","%adh Oferta 1","%adh Oferta 2","%adh Oferta 3","% Baja Parc. IPTV","% Corte rac"];
+
+  function reglaPorColumna(h,v){
+    if(!v.includes("%")) return "";
+    const n=parseFloat(v.replace("%",""));
+    if(isNaN(n)) return "";
+    const meta=reglasKPI[h]??85;
+    if(reglasInvertidas.includes(h)){
+      if(n<=meta) return "kpi-verde";
+      if(n<=meta+5) return "kpi-amarillo";
+      return "kpi-rojo";
+    }
+    if(n>=meta) return "kpi-verde";
+    if(n>=meta-10) return "kpi-amarillo";
+    return "kpi-rojo";
+  }
+
+  function render(filtrado){
+    tbody.innerHTML="";
+    const frag=document.createDocumentFragment();
+    filtrado.forEach(f=>{
+      const tr=document.createElement("tr");
+      f.forEach((c,i)=>{
+        const td=document.createElement("td");
+        const kpiClass=reglaPorColumna(encabezados[i],c);
+        td.className=kpiClass;
+
+        // KPI porcentual con barra
+        if(c.includes("%")){
+          const n=parseFloat(c.replace("%",""));
+          const bar=document.createElement("div");
+          bar.className="barra-kpi";
+          bar.style.width=n+"%";
+          bar.style.background=kpiClass==="kpi-verde"?"#28a745":kpiClass==="kpi-amarillo"?"#ffc107":"#dc3545";
+          td.appendChild(bar);
+          td.appendChild(document.createTextNode(c));
+          td.setAttribute("data-tooltip",`Meta: ${reglasKPI[encabezados[i]]||85}%`);
+        }else{
+          td.textContent=c;
+        }
+        tr.appendChild(td);
+      });
+      frag.appendChild(tr);
+    });
+    tbody.appendChild(frag);
+  }
+
+  function aplicarFiltros(){
+    const t=filtro.value.toLowerCase();
+    const v=vistaSel.value;
+    const m=mesSel.value;
+    render(datos.filter(f=>{
+      if(m && f[IDX.MES]!==m) return false;
+      if(v==="dia"){if(!f[IDX.DIA] || f[IDX.DIA].toLowerCase().includes("total") || f[IDX.SEMANA]?.toLowerCase().includes("total") || f[IDX.MES]?.toLowerCase().includes("total")) return false;}
+      if(v==="semana" && !f[IDX.SEMANA].includes("Total Semana")) return false;
+      if(v==="mes" && !f[IDX.MES].includes("Total")) return false;
+      return f.join(" ").toLowerCase().includes(t);
+    }));
+  }
+
+  function debounce(fn,d=300){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),d);};}
+
+  const filtro=document.getElementById("filtro");
+  const vistaSel=document.getElementById("vista");
+  filtro.addEventListener("keyup",debounce(aplicarFiltros));
+  vistaSel.addEventListener("change",aplicarFiltros);
+  mesSel.addEventListener("change",aplicarFiltros);
+  aplicarFiltros();
+
+  // Ordenamiento por columna
+  document.querySelectorAll("th").forEach(th=>{
+    th.addEventListener("click",()=>{
+      const col=th.getAttribute("data-col");
+      const idx=encabezados.indexOf(col);
+      datos.sort((a,b)=>{
+        const valA=a[idx].replace("%",""), valB=b[idx].replace("%","");
+        return (!isNaN(parseFloat(valA))?parseFloat(valA):valA) - (!isNaN(parseFloat(valB))?parseFloat(valB):valB);
+      });
+      aplicarFiltros();
+    });
+  });
+
+});
+
+function abrirAnalisis(){
+
+  const clave = prompt("Ingrese código de acceso");
+
+  if(clave !== "1234"){
+    alert("Código incorrecto");
+    return;
+  }
+
+  document.getElementById("modalAnalisis").style.display="block";
+}
+
+function cerrarAnalisis(){
+  document.getElementById("modalAnalisis").style.display="none";
+}
+
+function generarComparativa(){
+
+  const asesor = document.getElementById("asesorBusqueda").value.toLowerCase();
+  const tipo = document.getElementById("tipoComparacion").value;
+
+  const datosAsesor = datos.filter(f =>
+      f.join(" ").toLowerCase().includes(asesor)
+  );
+
+  if(datosAsesor.length==0){
+    document.getElementById("resultadoAnalisis").innerHTML="No se encontraron datos";
+    return;
+  }
+
+  let resultado = "<h4>Resultados</h4>";
+
+  const indicadores = [
+  "Prom. CONTENIDOS",
+  "% Ef. BAF",
+  "% Efect. Real",
+  "% Adher General",
+  "% VS Productividad",
+  "% Baja Parc. IPTV",
+  "ISN WHAT",
+  "HRS LOGIN",
+  "TMO_R"
+  ];
+
+  indicadores.forEach(ind=>{
+    
+    const idx = encabezados.indexOf(ind);
+
+    if(idx==-1) return;
+
+    const valores = datosAsesor
+  .map(f => parseFloat(f[idx]))
+  .filter(v => !isNaN(v));
+
+
+if(valores.length < 2) return;
+
+const primero = valores[0];
+const ultimo = valores[valores.length-1];
+
+const mejora = (ultimo - primero).toFixed(2);
+
+
+    resultado += `
+      <div style="padding:10px;border-bottom:1px solid #eee">
+        <b>${ind}</b><br>
+        Inicio: ${primero}<br>
+        Actual: ${ultimo}<br>
+        Mejora: <b style="color:${mejora >= 0 ? 'green' : 'red'}">${mejora}</b>
+
+      </div>
+    `;
+  });
+
+  document.getElementById("resultadoAnalisis").innerHTML = resultado;
+}
+
+    
+    
+</script>
+<div id="modalAnalisis" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;">
+  
+  <div style="background:white; width:80%; max-width:900px; margin:60px auto; padding:20px; border-radius:10px; position:relative;">
+    
+    <button onclick="cerrarAnalisis()" style="position:absolute; right:10px; top:10px;">❌</button>
+    
+    <h3>📊 Comparativa de Indicadores</h3>
+
+    <input type="text" id="asesorBusqueda" placeholder="Nombre del asesor">
+
+    <select id="tipoComparacion">
+      <option value="dia">Día vs Día</option>
+      <option value="semana">Semana vs Semana</option>
+      <option value="mes">Mes vs Mes</option>
+      <option value="trimestre">Trimestre</option>
+    </select>
+
+    <button onclick="generarComparativa()">Generar análisis</button>
+
+    <div id="resultadoAnalisis" style="margin-top:20px;"></div>
+
+  </div>
+
+</div>
+
+    
 </body>
 </html>
-
-
-

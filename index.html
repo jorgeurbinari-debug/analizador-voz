@@ -259,10 +259,9 @@ function cerrarAnalisis(){
 function generarComparativa(){
 
   const asesor = document.getElementById("asesorBusqueda").value.toLowerCase();
-  const tipo = document.getElementById("tipoComparacion").value;
 
   const datosAsesor = datos.filter(f =>
-      f.join(" ").toLowerCase().includes(asesor)
+    f.join(" ").toLowerCase().includes(asesor)
   );
 
   if(datosAsesor.length==0){
@@ -270,59 +269,101 @@ function generarComparativa(){
     return;
   }
 
-  let resultado = "<h4>Resultados</h4>";
+  const idxMes = encabezados.indexOf("MES");
 
   const indicadores = [
-  "Prom. CONTENIDOS",
-  "% Ef. BAF",
-  "% Efect. Real",
-  "% Adher General",
-  "% VS Productividad",
-  "% Baja Parc. IPTV",
-  "ISN WHAT",
-  "HRS LOGIN",
-  "TMO_R"
+    "Prom. CONTENIDOS",
+    "% Ef. BAF",
+    "% Efect. Real",
+    "% Adher General",
+    "% VS Productividad",
+    "% Baja Parc. IPTV",
+    "ISN WHAT",
+    "HRS LOGIN",
+    "TMO_R"
   ];
 
-  indicadores.forEach(ind=>{
-    
-    const idx = encabezados.indexOf(ind);
+  let html = `
+  <table style="width:100%; border-collapse:collapse; font-size:12px">
+  <thead>
+  <tr>
+    <th>Mes</th>
+  `;
 
-    if(idx==-1) return;
-
-    const valores = datosAsesor
-  .map(f => parseFloat(f[idx]))
-  .filter(v => !isNaN(v));
-
-
-if(valores.length < 2) return;
-
-const primero = valores[0];
-const ultimo = valores[valores.length-1];
-
-const mejora = (ultimo - primero).toFixed(2);
-
-
-    resultado += `
-      <div style="padding:10px;border-bottom:1px solid #eee">
-        <b>${ind}</b><br>
-        Inicio: ${primero}<br>
-        Actual: ${ultimo}<br>
-        Mejora: <b style="color:${mejora >= 0 ? 'green' : 'red'}">${mejora}</b>
-
-      </div>
-    `;
+  indicadores.forEach(i=>{
+    html += `<th>${i}</th><th>Versus</th>`;
   });
 
-  document.getElementById("resultadoAnalisis").innerHTML = resultado;
+  html += "</tr></thead><tbody>";
+
+  let prev = {};
+
+  datosAsesor.forEach((fila)=>{
+
+    html += `<tr>
+      <td style="font-weight:bold">${fila[idxMes]}</td>
+    `;
+
+    indicadores.forEach(ind=>{
+
+      const idx = encabezados.indexOf(ind);
+      if(idx==-1) return;
+
+      let valor = parseFloat(fila[idx]);
+      if(isNaN(valor)) valor = 0;
+
+      let estado="Inicio";
+      let color="#333";
+
+      if(prev[ind] !== undefined){
+
+        if(valor > prev[ind]){
+          estado="Mejora";
+          color="green";
+        }
+        else if(valor < prev[ind]){
+          estado="Desmejora";
+          color="red";
+        }
+
+      }
+
+      html += `
+        <td style="font-weight:bold">${valor}</td>
+        <td style="color:${color}; font-weight:bold">${estado}</td>
+      `;
+
+      prev[ind] = valor;
+
+    });
+
+    html += "</tr>";
+
+  });
+
+  html += "</tbody></table>";
+
+  document.getElementById("resultadoAnalisis").innerHTML = html;
 }
+
 
     
     
 </script>
 <div id="modalAnalisis" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999;">
   
-  <div style="background:white; width:80%; max-width:900px; margin:60px auto; padding:20px; border-radius:10px; position:relative;">
+  <div style="
+background:white;
+width:80%;
+max-width:900px;
+margin:60px auto;
+padding:20px;
+border-radius:10px;
+position:relative;
+max-height:80vh;
+overflow-y:auto;
+">
+
     
     <button onclick="cerrarAnalisis()" style="position:absolute; right:10px; top:10px;">❌</button>
     
@@ -348,3 +389,4 @@ const mejora = (ultimo - primero).toFixed(2);
     
 </body>
 </html>
+

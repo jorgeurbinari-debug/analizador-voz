@@ -259,38 +259,51 @@ function cerrarAnalisis(){
 function generarComparativa(){
 
   const asesor = document.getElementById("asesorBusqueda").value.toLowerCase();
+  const tipo = document.getElementById("tipoComparacion").value;
 
-  const datosAsesor = datos.filter(f => {
-  
-      const filaTexto = f.join(" ").toLowerCase();
-    
-      if(!filaTexto.includes(asesor)) return false;
-    
-      if(f.join(" ").toLowerCase().includes("total")) return false;
-    
-      return true;
-    
-    });
+  let columnaTiempo = "DIA";
 
+  if(tipo === "dia") columnaTiempo = "DIA";
+  if(tipo === "semana") columnaTiempo = "SEMANA";
+  if(tipo === "mes") columnaTiempo = "MES";
+  if(tipo === "trimestre") columnaTiempo = "MES";
 
-  if(datosAsesor.length==0){
+  const idxTiempo = encabezados.indexOf(columnaTiempo);
+
+  // FILTRAR SOLO EL ASESOR
+  let datosAsesor = datos.filter(f=>{
+    const texto = f.join(" ").toLowerCase();
+    return texto.includes(asesor);
+  });
+
+  // FILTRAR SEGÚN TIPO
+  datosAsesor = datosAsesor.filter(f=>{
+
+    if(tipo==="dia"){
+      return !f[idxTiempo].toLowerCase().includes("total");
+    }
+
+    if(tipo==="semana"){
+      return f[idxTiempo].toLowerCase().includes("total semana");
+    }
+
+    if(tipo==="mes"){
+      return f[idxTiempo].toLowerCase().includes("total");
+    }
+
+    if(tipo==="trimestre"){
+      return f[idxTiempo].toLowerCase().includes("total");
+    }
+
+  });
+
+  if(datosAsesor.length===0){
     document.getElementById("resultadoAnalisis").innerHTML="No se encontraron datos";
     return;
   }
-const tipo = document.getElementById("tipoComparacion").value;
 
-  let columnaTiempo = "MES";
-
-    if(tipo === "dia") columnaTiempo = "DIA";
-    if(tipo === "semana") columnaTiempo = "SEMANA";
-    if(tipo === "mes") columnaTiempo = "MES";
-    if(tipo === "trimestre") columnaTiempo = "MES";
-    
-    const idxTiempo = encabezados.indexOf(columnaTiempo);
-    datosAsesor.sort((a,b)=>{
-        return a[idxTiempo].localeCompare(b[idxTiempo]);
-      });
-
+  // ORDENAR POR TIEMPO
+  datosAsesor.sort((a,b)=> a[idxTiempo].localeCompare(b[idxTiempo]));
 
   const indicadores = [
     "Prom. CONTENIDOS",
@@ -308,7 +321,7 @@ const tipo = document.getElementById("tipoComparacion").value;
   <table style="width:100%; border-collapse:collapse; font-size:12px">
   <thead>
   <tr>
-    <th>${columnaTiempo}</th>
+  <th>${columnaTiempo}</th>
   `;
 
   indicadores.forEach(i=>{
@@ -319,16 +332,14 @@ const tipo = document.getElementById("tipoComparacion").value;
 
   let prev = {};
 
-  datosAsesor.forEach((fila)=>{
+  datosAsesor.forEach(fila=>{
 
-    html += `<tr>
-      <td style="font-weight:bold">${fila[idxTiempo]}</td>
-    `;
+    html += `<tr><td style="font-weight:bold">${fila[idxTiempo]}</td>`;
 
     indicadores.forEach(ind=>{
 
       const idx = encabezados.indexOf(ind);
-      if(idx==-1) return;
+      if(idx===-1) return;
 
       let valor = parseFloat(fila[idx]);
       if(isNaN(valor)) valor = 0;
@@ -336,36 +347,38 @@ const tipo = document.getElementById("tipoComparacion").value;
       let estado="Inicio";
       let color="#333";
 
-      if(prev[ind] !== undefined){
+      if(prev[ind]!==undefined){
 
-        if(valor > prev[ind]){
+        if(valor>prev[ind]){
           estado="Mejora";
           color="green";
         }
-        else if(valor < prev[ind]){
+        else if(valor<prev[ind]){
           estado="Desmejora";
           color="red";
         }
 
       }
 
-      html += `
-        <td style="font-weight:bold">${valor}</td>
-        <td style="color:${color}; font-weight:bold">${estado}</td>
+      html+=`
+      <td style="font-weight:bold">${valor}</td>
+      <td style="color:${color}; font-weight:bold">${estado}</td>
       `;
 
-      prev[ind] = valor;
+      prev[ind]=valor;
 
     });
 
-    html += "</tr>";
+    html+="</tr>";
 
   });
 
-  html += "</tbody></table>";
+  html+="</tbody></table>";
 
-  document.getElementById("resultadoAnalisis").innerHTML = html;
+  document.getElementById("resultadoAnalisis").innerHTML=html;
+
 }
+
 
 
     
@@ -410,6 +423,7 @@ overflow-y:auto;
     
 </body>
 </html>
+
 
 
 

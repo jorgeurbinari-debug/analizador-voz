@@ -269,7 +269,15 @@ function generarComparativa(){
     return;
   }
 
-  const idxMes = encabezados.indexOf("MES");
+  let columnaTiempo = "MES";
+
+    if(tipo === "dia") columnaTiempo = "DIA";
+    if(tipo === "semana") columnaTiempo = "SEMANA";
+    if(tipo === "mes") columnaTiempo = "MES";
+    if(tipo === "trimestre") columnaTiempo = "MES";
+    
+    const idxTiempo = encabezados.indexOf(columnaTiempo);
+
 
   const indicadores = [
     "Prom. CONTENIDOS",
@@ -301,7 +309,7 @@ function generarComparativa(){
   datosAsesor.forEach((fila)=>{
 
     html += `<tr>
-      <td style="font-weight:bold">${fila[idxMes]}</td>
+      <td style="font-weight:bold">${fila[idxTiempo]}</td>
     `;
 
     indicadores.forEach(ind=>{
@@ -389,4 +397,5 @@ overflow-y:auto;
     
 </body>
 </html>
+
 

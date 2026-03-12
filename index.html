@@ -28,7 +28,13 @@ tr:hover{background:#e8f4ff;}
 #resumenKPI{background:white;padding:12px;border-radius:10px;margin-bottom:10px;box-shadow:0 4px 10px rgba(0,0,0,0.1);font-size:12px;}
 #fechaActualizacion{text-align:center;font-weight:bold;margin-bottom:10px;color:#2c3e50;}
 /* Ocultar columnas Representante(DNI) y Lider */
-th:nth-child(1),td:nth-child(1),th:nth-child(3),td:nth-child(3){display:none;}
+.table-container th:nth-child(1),
+.table-container td:nth-child(1),
+.table-container th:nth-child(3),
+.table-container td:nth-child(3){
+  display:none;
+}
+  
 /* Congelar columna RAC */
 th:nth-child(2),td:nth-child(2){
   position: sticky;
@@ -442,6 +448,7 @@ overflow-y:auto;
     
 </body>
 </html>
+
 
 
 

@@ -266,23 +266,21 @@ function cerrarAnalisis(){
   
 function generarComparativa(){
 
-  const asesor = (document.getElementById("asesorBusqueda").value || "").toLowerCase();
-  document.getElementById("asesorTitulo").innerHTML =
-"👤 Asesor analizado: <span style='color:#007bff'>" + asesor.toUpperCase() + "</span>";
-  
-  const tipo = document.getElementById("tipoComparacion").value;
+ const asesor = (document.getElementById("asesorBusqueda").value || "").toLowerCase();
+ const tipo = document.getElementById("tipoComparacion").value;
+ const idxRAC = encabezados.indexOf("RAC");
 
   const idxMes = encabezados.indexOf("MES");
   const idxSemana = encabezados.indexOf("SEMANA");
   const idxDia = encabezados.indexOf("DIA");
 
-  let datosAsesor = datos.filter(f=>{
-    const texto = f.join(" ").toLowerCase();
-    if(!texto.includes(asesor)) return false;
+   let datosAsesor = datos.filter(f=>{
+    const rac = (f[idxRAC] || "").toLowerCase();
+      if(!rac.includes(asesor)) return false;
 
     // FILTROS SEGÚN TIPO
     if(tipo==="dia"){
-      if(f[idxDia].toLowerCase().includes("total")) return false;
+      if((f[idxDia] || "").toLowerCase().includes("total")) return false;
     }
 
     if(tipo==="semana"){
@@ -301,6 +299,14 @@ function generarComparativa(){
     return;
   }
 
+  let nombreRAC = datosAsesor[0][idxRAC] || "";
+
+    document.getElementById("asesorTitulo").innerHTML =
+    "👤 Asesor: <span style='color:#007bff'>" + nombreRAC + "</span>";
+  
+ 
+ 
+  
   const indicadores = [
     "Prom. CONTENIDOS",
     "% Ef. BAF",
@@ -474,7 +480,9 @@ overflow-y:auto;
 <script>
 function exportarPDF(){
 
-  const asesor = document.getElementById("asesorTitulo").innerText.replace("👤 Asesor analizado: ","");
+  const asesor = document
+    .getElementById("asesorTitulo")
+    .innerText.replace("👤 Asesor: ","");
 
   const contenedor = document.createElement("div");
 
@@ -496,6 +504,7 @@ function exportarPDF(){
 </script>
 </body>
 </html>
+
 
 
 

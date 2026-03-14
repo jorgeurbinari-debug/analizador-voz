@@ -71,6 +71,12 @@ td[data-tooltip]:hover::after{
 @keyframes highlight-down {0%{background:#fff}100%{background:#f8d7da;}}
 .highlight-up{animation: highlight-up 1s;}
 .highlight-down{animation: highlight-down 1s;}
+
+ #resultadoAnalisis table{
+  width:100%;
+  table-layout:auto;
+} 
+  
 </style>
 </head>
 <body>
@@ -478,32 +484,51 @@ overflow-y:auto;
  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
+
 function exportarPDF(){
 
   const asesor = document
     .getElementById("asesorTitulo")
     .innerText.replace("👤 Asesor: ","");
 
+  const contenido = document.getElementById("resultadoAnalisis");
+
   const contenedor = document.createElement("div");
 
+  contenedor.style.width = "1400px";  // ancho grande para que quepa todo
+  contenedor.style.fontSize = "10px";
+
   contenedor.innerHTML = `
-  <h2 style="text-align:center">Reporte de Indicadores</h2>
-  <p><b>Asesor:</b> ${asesor}</p>
-  <p><b>Fecha:</b> ${new Date().toLocaleDateString()}</p>
-  ` + document.getElementById("resultadoAnalisis").innerHTML;
+    <h2 style="text-align:center">Reporte de Indicadores</h2>
+    <p><b>Asesor:</b> ${asesor}</p>
+    <p><b>Fecha:</b> ${new Date().toLocaleDateString()}</p>
+    ${contenido.innerHTML}
+  `;
 
   const opciones = {
-    margin: 10,
-    filename: 'reporte_indicadores.pdf',
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+    margin: 5,
+    filename: "reporte_indicadores.pdf",
+    image: { type: 'jpeg', quality: 1 },
+    html2canvas: { 
+      scale: 3,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: 1400
+    },
+    jsPDF: { 
+      unit: "mm", 
+      format: "a4", 
+      orientation: "landscape"
+    }
   };
 
   html2pdf().set(opciones).from(contenedor).save();
 }
+  
 </script>
 </body>
 </html>
+
 
 
 

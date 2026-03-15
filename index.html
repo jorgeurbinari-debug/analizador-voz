@@ -105,7 +105,7 @@ td[data-tooltip]:hover::after{
     <tbody></tbody>
   </table>
 </div>
-
+<div id="limiteTabla" style="text-align:center;margin-top:8px;color:#777;font-size:11px;"></div>
 <script>
 
 let encabezados = [];
@@ -129,7 +129,7 @@ function parseCSV(text){
   return rows;
 }
 
-fetch(url)
+fetch(url,{cache:"force-cache"})
 .then(r=>r.text())
 .then(csv=>{
   const filas=parseCSV(csv);
@@ -171,7 +171,7 @@ fetch(url)
   const reglasInvertidas=["% Short Call","% Transf.","% Adh Capl","% Rein.","%adh Oferta 0","% Baja Parc.","% Argumentario","%adh Oferta 1","%adh Oferta 2","%adh Oferta 3","% Baja Parc. IPTV","% Corte rac"];
 
   function reglaPorColumna(h,v){
-    if(!v.includes("%")) return "";
+    if(!v || !v.includes("%")) return "";
     const n=parseFloat(v.replace("%",""));
     if(isNaN(n)) return "";
     const meta=reglasKPI[h]??85;
@@ -188,7 +188,7 @@ fetch(url)
   function render(filtrado){
     tbody.innerHTML="";
     const frag=document.createDocumentFragment();
-    filtrado.forEach(f=>{
+    filtrado.slice(0,500).forEach(f=>{
       const tr=document.createElement("tr");
       f.forEach((c,i)=>{
         const td=document.createElement("td");
@@ -196,7 +196,7 @@ fetch(url)
         td.className=kpiClass;
 
         // KPI porcentual con barra
-        if(c.includes("%")){
+        if(c && c.includes("%")){
           const n=parseFloat(c.replace("%",""));
           const bar=document.createElement("div");
           bar.className="barra-kpi";
@@ -213,6 +213,8 @@ fetch(url)
       frag.appendChild(tr);
     });
     tbody.appendChild(frag);
+    document.getElementById("limiteTabla").textContent =
+  `Mostrando ${Math.min(filtrado.length,500)} de ${filtrado.length} registros`;
   }
 
   function aplicarFiltros(){
@@ -224,11 +226,16 @@ fetch(url)
       if(v==="dia"){if(!f[IDX.DIA] || f[IDX.DIA].toLowerCase().includes("total") || f[IDX.SEMANA]?.toLowerCase().includes("total") || f[IDX.MES]?.toLowerCase().includes("total")) return false;}
       if(v==="semana" && !f[IDX.SEMANA].includes("Total Semana")) return false;
       if(v==="mes" && !f[IDX.MES].includes("Total")) return false;
-      return f.join(" ").toLowerCase().includes(t);
+      const textoBusqueda = (
+          (f[0] || "") + " " +
+          (f[1] || "") + " " +
+          (f[2] || "")
+            ).toLowerCase();
+        return textoBusqueda.includes(t);
     }));
   }
 
-  function debounce(fn,d=300){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),d);};}
+  function debounce(fn,d=600){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),d);};}
 
   const filtro=document.getElementById("filtro");
   const vistaSel=document.getElementById("vista");
@@ -243,8 +250,15 @@ fetch(url)
       const col=th.getAttribute("data-col");
       const idx=encabezados.indexOf(col);
       datos.sort((a,b)=>{
-        const valA=a[idx].replace("%",""), valB=b[idx].replace("%","");
-        return (!isNaN(parseFloat(valA))?parseFloat(valA):valA) - (!isNaN(parseFloat(valB))?parseFloat(valB):valB);
+        const valA=(a[idx] || "").replace("%","");
+        const valB=(b[idx] || "").replace("%","");
+        const numA = parseFloat(valA);
+        const numB = parseFloat(valB);            
+            if(!isNaN(numA) && !isNaN(numB)){
+                  return numA - numB;
+                }else{
+                    return valA.localeCompare(valB);
+                  }
       });
       aplicarFiltros();
     });
@@ -305,7 +319,7 @@ function generarComparativa(){
   const idxDia = encabezados.indexOf("DIA");
 
    let datosAsesor = datos.filter(f=>{
-    const rac = (f[idxRAC] || "").toLowerCase();
+    const rac = idxRAC !== -1 ? (f[idxRAC] || "").toLowerCase() : "";
       if(!rac.includes(asesor)) return false;
 
     // FILTROS SEGÚN TIPO

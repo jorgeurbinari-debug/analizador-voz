@@ -350,7 +350,9 @@ function generarComparativa() {
   const idxSemana = encabezados.indexOf("SEMANA");
   const idxDia = encabezados.indexOf("DIA");
 
-const periodo = periodoSel.value; // <- nuevo
+  const periodoSel = document.getElementById("periodoFiltro");
+  const periodo = periodoSel.value;
+
   let datosAsesor = datos.filter(f => {
     const rac = idxRAC !== -1 ? (f[idxRAC] || "").toLowerCase() : "";
     if (!rac.includes(asesor)) return false;
@@ -358,26 +360,25 @@ const periodo = periodoSel.value; // <- nuevo
     if (periodo && (f[idxMes] || "") !== periodo) return false;
 
     if (tipo === "dia") {
-      if ((f[idxDia] || "").toLowerCase().includes("total")) return false;
-      if ((f[idxSemana] || "").toLowerCase().includes("total")) return false;
+      // Excluir filas resumen
+      if ((f[idxSemana] || "").toLowerCase().includes("total semana")) return false;
       if ((f[idxMes] || "").toLowerCase().includes("total")) return false;
-      
     }
+
     if (tipo === "semana") {
-      if (!f[idxSemana].toLowerCase().includes("total semana")) return false;
-      if ((f[idxMes] || "").toLowerCase().includes("total")) return false;
+      // Solo incluir semanas que no sean totales
+      if ((f[idxSemana] || "").toLowerCase().includes("total semana")) return false;
+      if (periodo && (f[idxMes] || "") !== periodo) return false;
     }
+
     if (tipo === "mes" || tipo === "trimestre") {
-      if (!f[idxMes].toLowerCase().includes("total")) return false;
+      // Solo filas que sean totales mes o trimestre (según dato)
+      if (!(f[idxMes] || "").toLowerCase().includes("total")) return false;
+      if (periodo && (f[idxMes] || "") !== periodo) return false;
     }
 
     return true;
   });
-
-
-  
-  // Filtrar datos según asesor y tipo de vista
-
 
   if (datosAsesor.length === 0) {
     document.getElementById("resultadoAnalisis").innerHTML = "No se encontraron datos";

@@ -359,8 +359,9 @@ const periodo = periodoSel.value; // <- nuevo
 
     if (tipo === "dia") {
       if ((f[idxDia] || "").toLowerCase().includes("total")) return false;
-      if ((f[idxSemana] || "").toLowerCase().includes("total")) return false;
-      if ((f[idxMes] || "").toLowerCase().includes("total")) return false;
+      if ((f[idxSemana] || "").toLowerCase().includes("Total semana")) return false;
+      if ((f[idxMes] || "").toLowerCase().includes("Total")) return false;
+      
     }
     if (tipo === "semana") {
       if (!f[idxSemana].toLowerCase().includes("total semana")) return false;

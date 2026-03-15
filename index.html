@@ -573,7 +573,9 @@ function exportarPDF(){
 
   const contenedor = document.createElement("div");
 
-  contenedor.style.width = "1400px";  // ancho grande para que quepa todo
+  contenedor.style.width = "1800px";   // ancho grande real
+  contenedor.style.padding = "20px";
+  contenedor.style.background = "white";
   contenedor.style.fontSize = "10px";
 
   contenedor.innerHTML = `
@@ -588,10 +590,10 @@ function exportarPDF(){
     filename: "reporte_indicadores.pdf",
     image: { type: 'jpeg', quality: 1 },
     html2canvas: { 
-      scale: 3,
+      scale: 2,
+      useCORS: true,
       scrollX: 0,
-      scrollY: 0,
-      windowWidth: 1400
+      scrollY: 0
     },
     jsPDF: { 
       unit: "mm", 
@@ -600,7 +602,22 @@ function exportarPDF(){
     }
   };
 
-  html2pdf().set(opciones).from(contenedor).save();
+  html2pdf()
+    .set(opciones)
+    .from(contenedor)
+    .toPdf()
+    .get('pdf')
+    .then(function (pdf) {
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+
+      const imgWidth = 1800;
+      const ratio = pageWidth / imgWidth;
+
+      pdf.internal.scaleFactor = ratio;
+
+    })
+    .save();
 }
   
 </script>

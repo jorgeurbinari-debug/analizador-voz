@@ -563,17 +563,17 @@ overflow-y:auto;
 
 <script>
 
-function exportarPDF(){
-
+function exportarPDF() {
   const asesor = document
     .getElementById("asesorTitulo")
-    .innerText.replace("👤 Asesor: ","");
+    .innerText.replace("👤 Asesor: ", "");
 
   const contenido = document.getElementById("resultadoAnalisis");
 
   const contenedor = document.createElement("div");
 
-  contenedor.style.width = "1800px";   // ancho grande real
+  // Aseguramos que el ancho sea lo suficientemente grande para toda la tabla
+  contenedor.style.width = "2000px";  // aumenta si necesitas más
   contenedor.style.padding = "20px";
   contenedor.style.background = "white";
   contenedor.style.fontSize = "10px";
@@ -589,35 +589,21 @@ function exportarPDF(){
     margin: 5,
     filename: "reporte_indicadores.pdf",
     image: { type: 'jpeg', quality: 1 },
-    html2canvas: { 
-      scale: 2,
-      useCORS: true,
+    html2canvas: {
+      scale: 2,          // reduce si se vuelve muy pesado
       scrollX: 0,
-      scrollY: 0
+      scrollY: 0,
+      width: 2000,       // importante: mismo ancho que el contenedor
+      windowWidth: 2000, // importante: igual que ancho para capturar todo
     },
-    jsPDF: { 
-      unit: "mm", 
-      format: "a4", 
+    jsPDF: {
+      unit: "pt",        // puntos, para mejor precisión
+      format: [2000, 850],  // tamaño personalizado (ancho x alto) en pts (1pt = 1.333px aprox)
       orientation: "landscape"
     }
   };
 
-  html2pdf()
-    .set(opciones)
-    .from(contenedor)
-    .toPdf()
-    .get('pdf')
-    .then(function (pdf) {
-
-      const pageWidth = pdf.internal.pageSize.getWidth();
-
-      const imgWidth = 1800;
-      const ratio = pageWidth / imgWidth;
-
-      pdf.internal.scaleFactor = ratio;
-
-    })
-    .save();
+  html2pdf().set(opciones).from(contenedor).save();
 }
   
 </script>

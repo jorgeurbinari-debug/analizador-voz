@@ -308,49 +308,35 @@ function cerrarAnalisis(){
 
 
   
-function generarComparativa(){
-
- const asesor = (document.getElementById("asesorBusqueda").value || "").toLowerCase();
- const tipo = document.getElementById("tipoComparacion").value;
- const idxRAC = encabezados.indexOf("RAC");
-
+function generarComparativa() {
+  const asesor = (document.getElementById("asesorBusqueda").value || "").toLowerCase();
+  const tipo = document.getElementById("tipoComparacion").value;
+  const idxRAC = encabezados.indexOf("RAC");
   const idxMes = encabezados.indexOf("MES");
   const idxSemana = encabezados.indexOf("SEMANA");
   const idxDia = encabezados.indexOf("DIA");
 
-   let datosAsesor = datos.filter(f=>{
+  // Filtrar datos según asesor y tipo de vista
+  let datosAsesor = datos.filter(f => {
     const rac = idxRAC !== -1 ? (f[idxRAC] || "").toLowerCase() : "";
-      if(!rac.includes(asesor)) return false;
+    if (!rac.includes(asesor)) return false;
 
-    // FILTROS SEGÚN TIPO
-    if(tipo==="dia"){
-      if((f[idxDia] || "").toLowerCase().includes("total")) return false;
-    }
-
-    if(tipo==="semana"){
-      if(!f[idxSemana].toLowerCase().includes("total semana")) return false;
-    }
-
-    if(tipo==="mes" || tipo==="trimestre"){
-      if(!f[idxMes].toLowerCase().includes("total")) return false;
-    }
+    if (tipo === "dia" && (f[idxDia] || "").toLowerCase().includes("total")) return false;
+    if (tipo === "semana" && !f[idxSemana].toLowerCase().includes("total semana")) return false;
+    if ((tipo === "mes" || tipo === "trimestre") && !f[idxMes].toLowerCase().includes("total")) return false;
 
     return true;
   });
 
-  if(datosAsesor.length===0){
-    document.getElementById("resultadoAnalisis").innerHTML="No se encontraron datos";
+  if (datosAsesor.length === 0) {
+    document.getElementById("resultadoAnalisis").innerHTML = "No se encontraron datos";
     return;
   }
 
   let nombreRAC = datosAsesor[0][idxRAC] || "";
-
-    document.getElementById("asesorTitulo").innerHTML =
+  document.getElementById("asesorTitulo").innerHTML = 
     "👤 Asesor: <span style='color:#007bff'>" + nombreRAC + "</span>";
-  
- 
- 
-  
+
   const indicadores = [
     "Prom. CONTENIDOS",
     "% Ef. BAF",
@@ -363,117 +349,71 @@ function generarComparativa(){
     "TMO_R"
   ];
 
-const mapaTiempo = {
-  dia: {cols:["MES","SEMANA","DIA"], idx:[idxMes,idxSemana,idxDia]},
-  semana: {cols:["MES","SEMANA"], idx:[idxMes,idxSemana]},
-  mes: {cols:["MES"], idx:[idxMes]},
-  trimestre: {cols:["MES"], idx:[idxMes]}
-};
+  const indicadoresInvertidos = ["TMO_R"];
 
-const tiempo = mapaTiempo[tipo];
-const columnasTiempo = tiempo.cols;
-const idxTiempo = tiempo.idx;
+  const mapaTiempo = {
+    dia: { cols: ["MES", "SEMANA", "DIA"], idx: [idxMes, idxSemana, idxDia] },
+    semana: { cols: ["MES", "SEMANA"], idx: [idxMes, idxSemana] },
+    mes: { cols: ["MES"], idx: [idxMes] },
+    trimestre: { cols: ["MES"], idx: [idxMes] }
+  };
 
-let html = `
-<table style="width:100%; border-collapse:collapse; font-size:12px">
-<thead>
-<tr>
-`;
+  const tiempo = mapaTiempo[tipo];
+  const columnasTiempo = tiempo.cols;
+  const idxTiempo = tiempo.idx;
 
-columnasTiempo.forEach(c=>{
-  html += `<th>${c}</th>`;
-});
-
-  indicadores.forEach(i=>{
-    html += `<th>${i}</th><th>Versus</th>`;
-  });
-
+  let html = `<table style="width:100%; border-collapse:collapse; font-size:12px"><thead><tr>`;
+  columnasTiempo.forEach(c => { html += `<th>${c}</th>`; });
+  indicadores.forEach(i => { html += `<th>${i}</th><th>Versus</th>`; });
   html += "</tr></thead><tbody>";
 
   let prev = {};
 
-datosAsesor.sort((a,b)=>{
-  if(tipo === "dia"){
-    return new Date(a[idxDia]) - new Date(b[idxDia]);
-  }
-  return a[idxMes].localeCompare(b[idxMes]);
-});
+  // Ordenar por fecha o mes
+  datosAsesor.sort((a, b) => {
+    if (tipo === "dia") return new Date(a[idxDia]) - new Date(b[idxDia]);
+    return a[idxMes].localeCompare(b[idxMes]);
+  });
 
+  datosAsesor.forEach(fila => {
+    html += "<tr>";
+    idxTiempo.forEach(i => { html += `<td>${fila[i] || ""}</td>`; });
 
-  
-  datosAsesor.forEach(fila=>{
+    indicadores.forEach(ind => {
+      const idx = encabezados.findIndex(h => h.trim() === ind.trim());
+      let valorTexto = "";
+      let valor = null;
+      let estado = "Inicio";
+      let color = "#333";
 
-html += "<tr>";
+      if (idx !== -1) {
+        valorTexto = fila[idx] || "";
+        valor = parseFloat(valorTexto.replace("%", ""));
+        if (isNaN(valor)) valor = null;
 
-idxTiempo.forEach(i=>{
-  html += `<td>${fila[i] || ""}</td>`;
-});
+        if (prev[ind] !== undefined && valor !== null && prev[ind] !== null) {
+          // Comparación según indicador invertido
+          const invertido = indicadoresInvertidos.includes(ind);
+          if (invertido) {
+            if (valor < prev[ind]) { estado = "Mejora"; color = "green"; }
+            else if (valor > prev[ind]) { estado = "Desmejora"; color = "red"; }
+          } else {
+            if (valor > prev[ind]) { estado = "Mejora"; color = "green"; }
+            else if (valor < prev[ind]) { estado = "Desmejora"; color = "red"; }
+          }
+        }
+        prev[ind] = valor;
+      }
 
-   indicadores.forEach(ind=>{
-
-  const idx = encabezados.findIndex(h => h.trim() === ind.trim());
-
-  let valorTexto = "";
-  let valor = 0;
-  let estado="Inicio";
-  let color="#333";
-
-  if(idx !== -1){
-
-    valorTexto = fila[idx] || "";
-    valor = parseFloat(valorTexto.replace("%",""));
-    if(isNaN(valor)) valor = 0;
-
-if(prev[ind] !== undefined){
-
-  // Indicadores invertidos (donde bajar es mejor)
-  if(ind === "TMO_R"){
-
-    if(valor < prev[ind]){
-      estado="Mejora";
-      color="green";
-    }
-    else if(valor > prev[ind]){
-      estado="Desmejora";
-      color="red";
-    }
-
-  }else{
-
-    // Indicadores normales
-    if(valor > prev[ind]){
-      estado="Mejora";
-      color="green";
-    }
-    else if(valor < prev[ind]){
-      estado="Desmejora";
-      color="red";
-    }
-
-  }
-
-}
-
-    prev[ind] = valor;
-
-  }
-
-  html += `
-  <td style="font-weight:bold">${valorTexto}</td>
-  <td style="color:${color}; font-weight:bold">${estado}</td>
-  `;
-
-});
-    
+      html += `<td style="font-weight:bold">${valorTexto}</td>`;
+      html += `<td style="color:${color}; font-weight:bold">${estado}</td>`;
+    });
 
     html += "</tr>";
-
   });
 
   html += "</tbody></table>";
-
   document.getElementById("resultadoAnalisis").innerHTML = html;
-
 }
 
 

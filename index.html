@@ -261,10 +261,44 @@ fetch(url,{cache:"force-cache"})
                   }
       });
       aplicarFiltros();
+
+      
     });
   });
 
 });
+
+// Despues de fetch y renderizado inicial, fuera de cualquier sort o click de columna
+const tipoSel = document.getElementById("tipoComparacion");
+const periodoSel = document.getElementById("periodoFiltro");
+
+tipoSel.addEventListener("change", () => {
+  const tipo = tipoSel.value;
+  periodoSel.innerHTML = `<option value="">Todos</option>`; // reset
+
+  if (tipo === "dia") {
+    const idxMes = encabezados.indexOf("MES");
+    const meses = [...new Set(datos.map(f => f[idxMes]).filter(m => m))];
+    meses.forEach(m => {
+      const o = document.createElement("option");
+      o.value = o.textContent = m;
+      periodoSel.appendChild(o);
+    });
+    periodoSel.style.display = "inline-block";
+  } else if (tipo === "semana") {
+    const idxMes = encabezados.indexOf("MES");
+    const meses = [...new Set(datos.map(f => f[idxMes]).filter(m => m))];
+    meses.forEach(m => {
+      const o = document.createElement("option");
+      o.value = o.textContent = m;
+      periodoSel.appendChild(o);
+    });
+    periodoSel.style.display = "inline-block";
+  } else {
+    periodoSel.style.display = "none";
+  }
+});
+  
 
 function abrirAnalisis(){
 
@@ -316,17 +350,33 @@ function generarComparativa() {
   const idxSemana = encabezados.indexOf("SEMANA");
   const idxDia = encabezados.indexOf("DIA");
 
-  // Filtrar datos según asesor y tipo de vista
+const periodo = periodoSel.value; // <- nuevo
   let datosAsesor = datos.filter(f => {
     const rac = idxRAC !== -1 ? (f[idxRAC] || "").toLowerCase() : "";
     if (!rac.includes(asesor)) return false;
 
-    if (tipo === "dia" && (f[idxDia] || "").toLowerCase().includes("total")) return false;
-    if (tipo === "semana" && !f[idxSemana].toLowerCase().includes("total semana")) return false;
-    if ((tipo === "mes" || tipo === "trimestre") && !f[idxMes].toLowerCase().includes("total")) return false;
+    if (periodo && (f[idxMes] || "") !== periodo) return false;
+
+    if (tipo === "dia") {
+      if ((f[idxDia] || "").toLowerCase().includes("total")) return false;
+      if ((f[idxSemana] || "").toLowerCase().includes("total")) return false;
+      if ((f[idxMes] || "").toLowerCase().includes("total")) return false;
+    }
+    if (tipo === "semana") {
+      if (!f[idxSemana].toLowerCase().includes("total semana")) return false;
+      if ((f[idxMes] || "").toLowerCase().includes("total")) return false;
+    }
+    if (tipo === "mes" || tipo === "trimestre") {
+      if (!f[idxMes].toLowerCase().includes("total")) return false;
+    }
 
     return true;
   });
+
+
+  
+  // Filtrar datos según asesor y tipo de vista
+
 
   if (datosAsesor.length === 0) {
     document.getElementById("resultadoAnalisis").innerHTML = "No se encontraron datos";
@@ -392,7 +442,6 @@ function generarComparativa() {
         if (isNaN(valor)) valor = null;
 
         if (prev[ind] !== undefined && valor !== null && prev[ind] !== null) {
-          // Comparación según indicador invertido
           const invertido = indicadoresInvertidos.includes(ind);
           if (invertido) {
             if (valor < prev[ind]) { estado = "Mejora"; color = "green"; }
@@ -488,6 +537,9 @@ overflow-y:auto;
       <option value="semana">Semana vs Semana</option>
       <option value="mes">Mes vs Mes</option>
       <option value="trimestre">Trimestre</option>
+    </select>
+    <select id="periodoFiltro" style="display:none; margin-left:10px;">
+      <option value="">Todos</option>
     </select>
 
     <button onclick="generarComparativa()">Generar análisis</button>
